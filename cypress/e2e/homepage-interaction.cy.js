@@ -53,3 +53,59 @@ describe('Wikipedia homepage', () => {
     });
   });
 });
+
+describe('Wikipedia item page navigation', () => {
+    beforeEach(() => {
+        cy.visit('https://www.wikipedia.org/');
+        cy.get('input#searchInput').type('Fernando Pessoa{enter}');
+        cy.origin('https://en.wikipedia.org', () => {
+            cy.url().should('include', '/wiki/Fernando_Pessoa');
+            cy.get('#firstHeading').should('contain.text', 'Fernando Pessoa');
+        });
+    });
+
+    it('should exhibit the correct title', () => {
+        cy.origin('https://en.wikipedia.org', () => {
+            cy.title().should('include', 'Fernando Pessoa');
+            cy.get('#firstHeading').should('contain', 'Fernando Pessoa');
+        });
+    });
+
+    it('should be able to navigate to other item through a reference', () => {
+        cy.origin('https://en.wikipedia.org', () => {
+            cy.get('#mw-content-text', { timeout: 10000 }).should('exist');
+
+            cy.contains('#mw-content-text a', 'Álvaro de Campos')
+                .should('be.visible')
+                .scrollIntoView()
+                .click();
+                
+            cy.get('#firstHeading').should('contain', 'Álvaro de Campos');
+        });
+    });
+
+    it('should scroll to subsection and verify it', () => {
+        cy.origin('https://en.wikipedia.org', () => {
+            cy.contains('h2', 'Works')
+                .scrollIntoView()
+                .should('be.visible')
+                .nextUntil('h2')
+                .should('not.be.empty');
+        });
+    });
+
+    it('should have enough resources on bottom', () => {
+        cy.origin('https://en.wikipedia.org', () => {
+            cy.get('ol.references > li')
+                .should('have.length.greaterThan', 4);
+        });
+    });
+
+    it('should redirect to the discussion page when clicking on the discussion link', () => {
+        cy.origin('https://en.wikipedia.org', () => {
+            cy.get('#ca-talk a').click();
+            cy.url().should('include', '/wiki/Talk:Fernando_Pessoa');
+            cy.get('#firstHeading').should('contain.text', 'Talk:Fernando Pessoa');
+        });
+    });
+});
